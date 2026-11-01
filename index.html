@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodePulse - Unified Coding Analytics Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <i data-lucide="target" class="logo-icon"></i>
+                </div>
+                <h2>CodePulse</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-view="dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-view="submissions">
+                    <i data-lucide="history"></i>
+                    <span>Submissions</span>
+                </button>
+                <button class="nav-item" data-view="contests">
+                    <i data-lucide="trophy"></i>
+                    <span>Contests</span>
+                </button>
+                <button class="nav-item" data-view="stalk">
+                    <i data-lucide="users"></i>
+                    <span>Competitor Stalk</span>
+                </button>
+                <button class="nav-item" data-view="recommendations">
+                    <i data-lucide="zap"></i>
+                    <span>Practice Pool</span>
+                </button>
+                <button class="nav-item" data-view="leaderboard">
+                    <i data-lucide="medal"></i>
+                    <span>Leaderboard</span>
+                </button>
+                <button class="nav-item" data-view="bookmarks">
+                    <i data-lucide="bookmark"></i>
+                    <span>Bookmarks & Notes</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="open-export-btn" class="export-badge-btn">
+                    <i data-lucide="share-2"></i>
+                    <span>Export Profile Badge</span>
+                </button>
+                <button id="open-settings-btn" class="settings-btn">
+                    <i data-lucide="settings"></i>
+                    <span>Configure Handles</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="main-header">
+                <div class="header-left">
+                    <h1 id="view-title">Dashboard</h1>
+                    <p id="view-subtitle" class="text-muted">Welcome back, track your progress</p>
+                </div>
+                <div class="header-right">
+                    <!-- Interactive Practice Sprint Timer Pill -->
+                    <div class="timer-pill glass-panel" style="display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.9rem; border-radius: 50px;">
+                        <i data-lucide="timer" style="color: var(--cyan); width: 18px;"></i>
+                        <span id="timer-display" style="font-weight: 700; font-family: monospace; font-size: 1.05rem;">15:00</span>
+                        <div class="timer-controls" style="display: flex; gap: 0.35rem;">
+                            <button id="timer-start-btn" class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;"><i data-lucide="play"></i> Start</button>
+                            <button id="timer-reset-btn" class="icon-action-btn" style="width: 28px; height: 28px;" title="Reset Timer"><i data-lucide="rotate-ccw" style="width: 14px;"></i></button>
+                        </div>
+                    </div>
+
+                    <button id="theme-toggle-btn" class="icon-action-btn" title="Toggle Theme (Light / Dark)">
+                        <i data-lucide="sun" id="theme-icon"></i>
+                    </button>
+                    <div class="user-pill">
+                        <div class="status-indicator online"></div>
+                        <span id="active-user-name">User Profile</span>
+                    </div>
+                    <button id="refresh-data-btn" class="icon-action-btn" title="Refresh Coding Data">
+                        <i data-lucide="rotate-cw" id="refresh-icon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard View -->
+            <section id="dashboard-view" class="content-view">
+                <!-- Streak & Daily Goal Tracker Banner -->
+                <div class="streak-goal-banner glass-panel">
+                    <div class="streak-card">
+                        <div class="fire-badge">🔥</div>
+                        <div class="streak-info">
+                            <span class="stat-label">Active Coding Streak</span>
+                            <h3 id="streak-days-val">7 Days Streak</h3>
+                        </div>
+                    </div>
+                    <div class="goal-tracker-card">
+                        <div class="goal-header">
+                            <h4><i data-lucide="target" style="color: var(--cyan); width: 18px;"></i> Daily Solving Goal</h4>
+                            <span class="stat-label" id="goal-progress-text">2 / 3 Problems Completed</span>
+                        </div>
+                        <div class="goal-progress-bar">
+                            <div class="goal-progress-fill" id="goal-progress-fill" style="width: 66%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Summary Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon-wrapper lc-color">
+                            <i data-lucide="code-2"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Total Solved</span>
+                            <span class="stat-value" id="total-solved-val">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon-wrapper cf-color">
+                            <i data-lucide="award"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Codeforces Rating</span>
+                            <span class="stat-value" id="cf-rating-val">N/A</span>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon-wrapper gh-color">
+                            <i data-lucide="flame"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">GitHub Events</span>
+                            <span class="stat-value" id="git-commits-val">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <div class="stat-icon-wrapper active-color">
+                            <i data-lucide="calendar"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Active Days (Last 30D)</span>
+                            <span class="stat-value" id="active-days-val">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Difficulty Breakdown Matrix -->
+                <div class="difficulty-matrix-grid">
+                    <div class="matrix-card easy-card">
+                        <div class="matrix-header">
+                            <span class="matrix-title">Easy Challenges</span>
+                            <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: var(--success);">Easy</span>
+                        </div>
+                        <div class="matrix-count" id="easy-count-val" style="color: var(--success);">57</div>
+                    </div>
+                    <div class="matrix-card medium-card">
+                        <div class="matrix-header">
+                            <span class="matrix-title">Medium Challenges</span>
+                            <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: var(--warning);">Medium</span>
+                        </div>
+                        <div class="matrix-count" id="medium-count-val" style="color: var(--warning);">105</div>
+                    </div>
+                    <div class="matrix-card hard-card">
+                        <div class="matrix-header">
+                            <span class="matrix-title">Hard Challenges</span>
+                            <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: var(--error);">Hard</span>
+                        </div>
+                        <div class="matrix-count" id="hard-count-val" style="color: var(--error);">22</div>
+                    </div>
+                </div>
+
+                <!-- Unified Heatmap Grid -->
+                <div class="heatmap-section glass-panel">
+                    <div class="section-header">
+                        <div class="title-wrap">
+                            <h3><i data-lucide="calendar-range" class="section-icon"></i>Unified Activity Heatmap</h3>
+                            <p class="text-muted">Combined submission and commit history over the past year</p>
+                        </div>
+                        <div class="heatmap-legend">
+                            <span>Less</span>
+                            <div class="legend-box level-0"></div>
+                            <div class="legend-box level-1"></div>
+                            <div class="legend-box level-2"></div>
+                            <div class="legend-box level-3"></div>
+                            <div class="legend-box level-4"></div>
+                            <span>More</span>
+                        </div>
+                    </div>
+                    <div class="heatmap-container-outer">
+                        <div class="heatmap-wrapper-inner">
+                            <div class="month-labels-row" id="month-labels">
+                                <!-- Populated by JS -->
+                            </div>
+                            <div class="heatmap-body">
+                                <div class="day-labels">
+                                    <span>Mon</span>
+                                    <span>Wed</span>
+                                    <span>Fri</span>
+                                </div>
+                                <div class="heatmap-grid" id="heatmap-grid">
+                                    <!-- Populated dynamically by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Container (Difficulty, Platform, & Topic Skills Radar) -->
+                <div class="charts-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="chart-card glass-panel">
+                        <h3><i data-lucide="pie-chart" class="section-icon"></i>Difficulty Distribution</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="difficultyChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card glass-panel">
+                        <h3><i data-lucide="bar-chart-3" class="section-icon"></i>Platform Breakdown</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="platformChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card glass-panel">
+                        <h3><i data-lucide="brain" class="section-icon"></i>Topic Skills Radar</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Submissions Preview -->
+                <div class="recent-list-section glass-panel">
+                    <div class="section-header">
+                        <h3><i data-lucide="clock" class="section-icon"></i>Recent Activity</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Problem Name</th>
+                                    <th>Platform</th>
+                                    <th>Language</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-activities-list">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Submissions List View -->
+            <section id="submissions-view" class="content-view hidden">
+                <div class="filter-bar glass-panel">
+                    <div class="filter-group">
+                        <label for="filter-platform">Platform</label>
+                        <select id="filter-platform">
+                            <option value="all">All Platforms</option>
+                            <option value="leetcode">LeetCode</option>
+                            <option value="codeforces">Codeforces</option>
+                            <option value="github">GitHub</option>
+                            <option value="codechef">CodeChef</option>
+                            <option value="atcoder">AtCoder</option>
+                            <option value="hackerrank">HackerRank</option>
+                            <option value="geeksforgeeks">GeeksforGeeks</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-search">Search Problem</label>
+                        <div class="search-input-wrapper">
+                            <i data-lucide="search" class="search-icon"></i>
+                            <input type="text" id="filter-search" placeholder="Type problem name or tag...">
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-status">Status</label>
+                        <select id="filter-status">
+                            <option value="all">All Submissions</option>
+                            <option value="accepted">Accepted / Success</option>
+                            <option value="failed">Failed / Other</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="flex-grow: 0; align-self: flex-end; display: flex; gap: 0.5rem;">
+                        <button id="export-csv-btn" class="btn btn-secondary" title="Export to CSV Spreadsheet"><i data-lucide="download"></i> Export CSV</button>
+                        <button id="export-json-btn" class="btn btn-secondary" title="Export to JSON File"><i data-lucide="file-json"></i> JSON</button>
+                    </div>
+                </div>
+
+                <div class="submissions-table-wrap glass-panel">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Problem / Event Name</th>
+                                    <th>Platform</th>
+                                    <th>Category/Difficulty</th>
+                                    <th>Language</th>
+                                    <th>Submission Time</th>
+                                    <th>Verdict</th>
+                                </tr>
+                            </thead>
+                            <tbody id="submissions-full-list">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-footer">
+                        <span id="pagination-info" class="text-muted">Showing 0 entries</span>
+                        <div class="pagination-buttons">
+                            <button id="prev-page-btn" class="btn btn-secondary"><i data-lucide="chevron-left"></i></button>
+                            <button id="next-page-btn" class="btn btn-secondary"><i data-lucide="chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dedicated Contests Page View -->
+            <section id="contests-view" class="content-view hidden">
+                <div class="filter-bar glass-panel" style="margin-bottom: 2rem;">
+                    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;" id="contest-platform-tabs">
+                        <button class="btn btn-primary contest-tab-btn active" data-platform="all"><i data-lucide="trophy"></i> All Platforms</button>
+                        <button class="btn btn-secondary contest-tab-btn" data-platform="codeforces"><i data-lucide="award" style="color: var(--cf-color);"></i> Codeforces</button>
+                        <button class="btn btn-secondary contest-tab-btn" data-platform="leetcode"><i data-lucide="code-2" style="color: var(--lc-color);"></i> LeetCode</button>
+                        <button class="btn btn-secondary contest-tab-btn" data-platform="atcoder"><i data-lucide="flame" style="color: var(--cyan);"></i> AtCoder</button>
+                        <button class="btn btn-secondary contest-tab-btn" data-platform="codechef"><i data-lucide="chef-hat" style="color: var(--cc-color);"></i> CodeChef</button>
+                        <button class="btn btn-secondary contest-tab-btn" data-platform="hackerrank"><i data-lucide="terminal" style="color: var(--hr-color);"></i> HackerRank</button>
+                        <button class="btn btn-secondary contest-tab-btn" data-platform="geeksforgeeks"><i data-lucide="book-open" style="color: var(--gfg-color);"></i> GeeksforGeeks</button>
+                    </div>
+                </div>
+
+                <!-- Codeforces Section -->
+                <div class="contest-platform-section" id="section-codeforces" style="margin-bottom: 2.5rem;">
+                    <div class="section-header" style="margin-bottom: 1rem;">
+                        <h3><i data-lucide="award" style="color: var(--cf-color);" class="section-icon"></i> Codeforces Upcoming Contests</h3>
+                    </div>
+                    <div class="contests-grid" id="contests-list-codeforces" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- LeetCode Section -->
+                <div class="contest-platform-section" id="section-leetcode" style="margin-bottom: 2.5rem;">
+                    <div class="section-header" style="margin-bottom: 1rem;">
+                        <h3><i data-lucide="code-2" style="color: var(--lc-color);" class="section-icon"></i> LeetCode Upcoming Contests</h3>
+                    </div>
+                    <div class="contests-grid" id="contests-list-leetcode" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- AtCoder Section -->
+                <div class="contest-platform-section" id="section-atcoder" style="margin-bottom: 2.5rem;">
+                    <div class="section-header" style="margin-bottom: 1rem;">
+                        <h3><i data-lucide="flame" style="color: var(--cyan);" class="section-icon"></i> AtCoder Upcoming Contests</h3>
+                    </div>
+                    <div class="contests-grid" id="contests-list-atcoder" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- CodeChef Section -->
+                <div class="contest-platform-section" id="section-codechef" style="margin-bottom: 2.5rem;">
+                    <div class="section-header" style="margin-bottom: 1rem;">
+                        <h3><i data-lucide="chef-hat" style="color: var(--cc-color);" class="section-icon"></i> CodeChef Upcoming Contests</h3>
+                    </div>
+                    <div class="contests-grid" id="contests-list-codechef" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- HackerRank Section -->
+                <div class="contest-platform-section" id="section-hackerrank" style="margin-bottom: 2.5rem;">
+                    <div class="section-header" style="margin-bottom: 1rem;">
+                        <h3><i data-lucide="terminal" style="color: var(--hr-color);" class="section-icon"></i> HackerRank Upcoming Contests</h3>
+                    </div>
+                    <div class="contests-grid" id="contests-list-hackerrank" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- GeeksforGeeks Section -->
+                <div class="contest-platform-section" id="section-geeksforgeeks" style="margin-bottom: 2.5rem;">
+                    <div class="section-header" style="margin-bottom: 1rem;">
+                        <h3><i data-lucide="book-open" style="color: var(--gfg-color);" class="section-icon"></i> GeeksforGeeks Upcoming Contests</h3>
+                    </div>
+                    <div class="contests-grid" id="contests-list-geeksforgeeks" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stalk / Compare View -->
+            <section id="stalk-view" class="content-view hidden">
+                <div class="stalk-input-panel glass-panel">
+                    <h3>Compare Profiles by Platform</h3>
+                    <p class="text-muted">Enter handles for each platform to compare stats independently.</p>
+                    
+                    <div class="stalk-platform-inputs" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                        <div class="input-col">
+                            <label><i data-lucide="code-2" style="color: var(--lc-color);"></i> Target LeetCode</label>
+                            <input type="text" id="stalk-user-b-lc" placeholder="e.g. coder_one">
+                        </div>
+                        <div class="input-col">
+                            <label><i data-lucide="award" style="color: var(--cf-color);"></i> Target Codeforces</label>
+                            <input type="text" id="stalk-user-b-cf" placeholder="e.g. tourist">
+                        </div>
+                        <div class="input-col">
+                            <label><i data-lucide="github" style="color: var(--gh-color);"></i> Target GitHub</label>
+                            <input type="text" id="stalk-user-b-gh" placeholder="e.g. torvalds">
+                        </div>
+                        <div class="input-col">
+                            <label><i data-lucide="chef-hat" style="color: var(--cc-color);"></i> Target CodeChef</label>
+                            <input type="text" id="stalk-user-b-cc" placeholder="e.g. gennady">
+                        </div>
+                        <div class="input-col">
+                            <label><i data-lucide="zap" style="color: var(--ac-color);"></i> Target AtCoder</label>
+                            <input type="text" id="stalk-user-b-ac" placeholder="e.g. rng_58">
+                        </div>
+                        <div class="input-col">
+                            <label><i data-lucide="terminal" style="color: var(--hr-color);"></i> Target HackerRank</label>
+                            <input type="text" id="stalk-user-b-hr" placeholder="e.g. hacker_one">
+                        </div>
+                        <div class="input-col">
+                            <label><i data-lucide="book-open" style="color: var(--gfg-color);"></i> Target GeeksforGeeks</label>
+                            <input type="text" id="stalk-user-b-gfg" placeholder="e.g. gfg_coder">
+                        </div>
+                    </div>
+
+                    <button id="run-compare-btn" class="btn btn-primary btn-block"><i data-lucide="swords"></i> Compare Profiles Across Platforms</button>
+                </div>
+
+                <!-- Stalk Results -->
+                <div id="stalk-results" class="stalk-results-grid hidden">
+                    <!-- Codeforces Comparison -->
+                    <div class="stalk-metrics-card glass-panel">
+                        <h3><i data-lucide="award" style="color: var(--cf-color);"></i> Codeforces Rating Comparison</h3>
+                        <div class="comparison-row">
+                            <div class="compare-score user-a">
+                                <span class="score-label" id="user-a-cf-name">You</span>
+                                <span class="score-num" id="user-a-cf-rating">0</span>
+                            </div>
+                            <div class="compare-meter-container">
+                                <div class="meter-bar">
+                                    <div class="meter-progress" id="rating-comparison-meter" style="width: 50%;"></div>
+                                </div>
+                            </div>
+                            <div class="compare-score user-b">
+                                <span class="score-label" id="user-b-cf-name">Target</span>
+                                <span class="score-num" id="user-b-cf-rating">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LeetCode Comparison -->
+                    <div class="stalk-metrics-card glass-panel">
+                        <h3><i data-lucide="code-2" style="color: var(--lc-color);"></i> LeetCode Solved Comparison</h3>
+                        <div class="comparison-row">
+                            <div class="compare-score user-a">
+                                <span class="score-label">You</span>
+                                <span class="score-num" id="user-a-lc-solved">0</span>
+                            </div>
+                            <div class="compare-meter-container">
+                                <div class="meter-bar">
+                                    <div class="meter-progress" id="lc-comparison-meter" style="width: 50%;"></div>
+                                </div>
+                            </div>
+                            <div class="compare-score user-b">
+                                <span class="score-label">Target</span>
+                                <span class="score-num" id="user-b-lc-solved">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CodeChef Comparison -->
+                    <div class="stalk-metrics-card glass-panel">
+                        <h3><i data-lucide="chef-hat" style="color: var(--cc-color);"></i> CodeChef Rating Comparison</h3>
+                        <div class="comparison-row">
+                            <div class="compare-score user-a">
+                                <span class="score-label">You</span>
+                                <span class="score-num" id="user-a-cc-rating">0</span>
+                            </div>
+                            <div class="compare-meter-container">
+                                <div class="meter-bar">
+                                    <div class="meter-progress" id="cc-comparison-meter" style="width: 50%;"></div>
+                                </div>
+                            </div>
+                            <div class="compare-score user-b">
+                                <span class="score-label">Target</span>
+                                <span class="score-num" id="user-b-cc-rating">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AtCoder Comparison -->
+                    <div class="stalk-metrics-card glass-panel">
+                        <h3><i data-lucide="zap" style="color: var(--ac-color);"></i> AtCoder Rating Comparison</h3>
+                        <div class="comparison-row">
+                            <div class="compare-score user-a">
+                                <span class="score-label">You</span>
+                                <span class="score-num" id="user-a-ac-rating">0</span>
+                            </div>
+                            <div class="compare-meter-container">
+                                <div class="meter-bar">
+                                    <div class="meter-progress" id="ac-comparison-meter" style="width: 50%;"></div>
+                                </div>
+                            </div>
+                            <div class="compare-score user-b">
+                                <span class="score-label">Target</span>
+                                <span class="score-num" id="user-b-ac-rating">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HackerRank Comparison -->
+                    <div class="stalk-metrics-card glass-panel">
+                        <h3><i data-lucide="terminal" style="color: var(--hr-color);"></i> HackerRank Status Comparison</h3>
+                        <div class="comparison-row">
+                            <div class="compare-score user-a">
+                                <span class="score-label">You</span>
+                                <span class="score-num" id="user-a-hr-rating">N/A</span>
+                            </div>
+                            <div class="compare-meter-container">
+                                <div class="meter-bar">
+                                    <div class="meter-progress" id="hr-comparison-meter" style="width: 50%;"></div>
+                                </div>
+                            </div>
+                            <div class="compare-score user-b">
+                                <span class="score-label">Target</span>
+                                <span class="score-num" id="user-b-hr-rating">N/A</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GeeksforGeeks Comparison -->
+                    <div class="stalk-metrics-card glass-panel">
+                        <h3><i data-lucide="book-open" style="color: var(--gfg-color);"></i> GeeksforGeeks Score Comparison</h3>
+                        <div class="comparison-row">
+                            <div class="compare-score user-a">
+                                <span class="score-label">You</span>
+                                <span class="score-num" id="user-a-gfg-rating">0</span>
+                            </div>
+                            <div class="compare-meter-container">
+                                <div class="meter-bar">
+                                    <div class="meter-progress" id="gfg-comparison-meter" style="width: 50%;"></div>
+                                </div>
+                            </div>
+                            <div class="compare-score user-b">
+                                <span class="score-label">Target</span>
+                                <span class="score-num" id="user-b-gfg-rating">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Target Profile Recent Submissions Table -->
+                    <div class="stalk-recent-card glass-panel" style="grid-column: 1/-1;">
+                        <h3>Target Profile Solved Highlights</h3>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Problem Name</th>
+                                        <th>Platform</th>
+                                        <th>Difficulty</th>
+                                        <th>Verdict</th>
+                                        <th>Language</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stalk-user-b-activity">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recommendations View -->
+            <section id="recommendations-view" class="content-view hidden">
+                <div id="topic-skill-analyzer"></div>
+
+                <div class="recs-intro glass-panel">
+                    <div class="title-wrap">
+                        <h3>Smart Recommendation Engine</h3>
+                        <p class="text-muted">Personalized problem recommendations calculated dynamically using your active Codeforces rating & LeetCode performance.</p>
+                    </div>
+                    <div class="rec-filters" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                        <select id="rec-platform-filter">
+                            <option value="all">All Platforms</option>
+                            <option value="leetcode">LeetCode</option>
+                            <option value="codeforces">Codeforces</option>
+                            <option value="codechef">CodeChef</option>
+                            <option value="atcoder">AtCoder</option>
+                            <option value="hackerrank">HackerRank</option>
+                            <option value="geeksforgeeks">GeeksforGeeks</option>
+                        </select>
+                        <select id="rec-difficulty-level">
+                            <option value="matched">Based on my Rating</option>
+                            <option value="easy">Easy / Warmup</option>
+                            <option value="medium">Challenging</option>
+                            <option value="hard">Expert level</option>
+                        </select>
+                        <button id="refresh-recs-btn" class="btn btn-secondary"><i data-lucide="sparkles"></i> Refresh Recommendations</button>
+                    </div>
+                </div>
+
+                <div class="recs-grid" id="recommendations-container">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <!-- Leaderboard View -->
+            <section id="leaderboard-view" class="content-view hidden">
+                <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h3><i data-lucide="medal" style="color: var(--warning);"></i> Multi-Platform Global & Friend Rankings</h3>
+                        <p class="text-muted">Paste your friends' profile links to automatically sync their live stats and compete together!</p>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                        <select id="leaderboard-filter-type" style="padding: 0.5rem 0.8rem; border-radius: 8px; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1);">
+                            <option value="all">🌐 All Coders</option>
+                            <option value="friends">👥 Friends Only</option>
+                            <option value="global">🏆 Global Legends</option>
+                        </select>
+                        <select id="leaderboard-sort-by" style="padding: 0.5rem 0.8rem; border-radius: 8px; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1);">
+                            <option value="totalSolved">Sort: Total Solved</option>
+                            <option value="codeforces">Sort: Codeforces Rating</option>
+                            <option value="codechef">Sort: CodeChef Rating</option>
+                            <option value="atcoder">Sort: AtCoder Rating</option>
+                        </select>
+                        <button id="open-add-friend-btn" class="btn btn-primary"><i data-lucide="user-plus"></i> Add Friend via Links</button>
+                    </div>
+                </div>
+                <div class="table-responsive glass-panel">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Coder Name</th>
+                                <th>Total Solved</th>
+                                <th>Codeforces</th>
+                                <th>CodeChef</th>
+                                <th>AtCoder</th>
+                                <th>Streak</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-rows">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Bookmarks & Notes View -->
+            <section id="bookmarks-view" class="content-view hidden">
+                <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3><i data-lucide="bookmark" style="color: var(--purple);"></i> Bookmarks & Revision Notes Manager</h3>
+                        <p class="text-muted">Save difficult problems into custom revision playlists with personal notes and code snippets.</p>
+                    </div>
+                    <button id="open-add-bookmark-btn" class="btn btn-primary"><i data-lucide="plus-circle"></i> Add Problem Bookmark</button>
+                </div>
+                <div class="recs-grid" id="bookmarks-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Export Profile Badge Modal -->
+    <div id="export-modal" class="modal-overlay">
+        <div class="modal-content glass-panel animate-scale">
+            <div class="modal-header">
+                <h2>Export Profile Markdown Badge</h2>
+                <button id="close-export-btn" class="close-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Copy this markdown snippet to embed your CodePulse stats badge on your GitHub README or Portfolio site:</p>
+                <div class="code-preview-box" id="markdown-badge-snippet">
+                    [![CodePulse Stats](https://img.shields.io/badge/CodePulse-Total%20Solved%3A%20184-8b5cf6?style=for-the-badge&logo=codeforces)](http://localhost:3000)
+                </div>
+                <button id="copy-badge-btn" class="btn btn-primary btn-block"><i data-lucide="copy"></i> Copy Markdown Badge</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configure Handles Modal -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content glass-panel animate-scale">
+            <div class="modal-header">
+                <h2>Configure Profile Handles</h2>
+                <button id="close-modal-btn" class="close-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Enter your handles for the platforms you want to track. Leave blank if you do not use a platform.</p>
+                <form id="handles-form">
+                    <div class="form-group">
+                        <label for="input-leetcode-handle"><i data-lucide="code-2" class="form-icon text-orange"></i> LeetCode Username</label>
+                        <input type="text" id="input-leetcode-handle" placeholder="e.g. coder_one">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-codeforces-handle"><i data-lucide="award" class="form-icon text-red"></i> Codeforces Handle</label>
+                        <input type="text" id="input-codeforces-handle" placeholder="e.g. tourist">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-github-handle"><i data-lucide="github" class="form-icon text-blue"></i> GitHub Username</label>
+                        <input type="text" id="input-github-handle" placeholder="e.g. torvalds">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-codechef-handle"><i data-lucide="chef-hat" class="form-icon text-purple"></i> CodeChef Handle</label>
+                        <input type="text" id="input-codechef-handle" placeholder="e.g. gennady">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-atcoder-handle"><i data-lucide="zap" class="form-icon text-cyan"></i> AtCoder Username</label>
+                        <input type="text" id="input-atcoder-handle" placeholder="e.g. rng_58">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-hackerrank-handle"><i data-lucide="terminal" class="form-icon text-teal"></i> HackerRank Username</label>
+                        <input type="text" id="input-hackerrank-handle" placeholder="e.g. hacker_one">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-gfg-handle"><i data-lucide="book-open" class="form-icon text-green"></i> GeeksforGeeks Handle</label>
+                        <input type="text" id="input-gfg-handle" placeholder="e.g. gfg_coder">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Save and Sync Dashboard</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Problem Bookmark Modal -->
+    <div id="add-bookmark-modal" class="modal-overlay">
+        <div class="modal-content glass-panel animate-scale">
+            <div class="modal-header">
+                <h2>Add Problem Bookmark & Notes</h2>
+                <button id="close-bookmark-modal-btn" class="close-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Save a problem link with custom notes for revision.</p>
+                <form id="add-bookmark-form">
+                    <div class="form-group">
+                        <label for="bm-title">Problem Title</label>
+                        <input type="text" id="bm-title" placeholder="e.g. Kadane's Algorithm" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bm-platform">Platform</label>
+                        <select id="bm-platform">
+                            <option value="LeetCode">LeetCode</option>
+                            <option value="Codeforces">Codeforces</option>
+                            <option value="CodeChef">CodeChef</option>
+                            <option value="AtCoder">AtCoder</option>
+                            <option value="HackerRank">HackerRank</option>
+                            <option value="GeeksforGeeks">GeeksforGeeks</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bm-category">Playlist / Tag Category</label>
+                        <input type="text" id="bm-category" placeholder="e.g. Dynamic Programming, Interview Prep">
+                    </div>
+                    <div class="form-group">
+                        <label for="bm-link">Problem URL</label>
+                        <input type="url" id="bm-link" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label for="bm-notes">Revision Notes & Hints</label>
+                        <textarea id="bm-notes" rows="3" placeholder="Key trick, edge cases, time/space complexity notes..." style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.75rem;"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Save Bookmark & Notes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Friend Modal -->
+    <div id="add-friend-modal" class="modal-overlay">
+        <div class="modal-content glass-panel animate-scale">
+            <div class="modal-header">
+                <h2>Add Friend via Platform Links</h2>
+                <button id="close-friend-modal-btn" class="close-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Paste your friend's profile links or usernames. CodePulse will extract their handle & fetch stats automatically!</p>
+                <form id="add-friend-form">
+                    <div class="form-group">
+                        <label for="friend-name">Friend's Name / Alias</label>
+                        <input type="text" id="friend-name" placeholder="e.g. Rahul Sharma" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="friend-cf-url"><i data-lucide="award" class="text-red"></i> Codeforces Profile Link or Handle</label>
+                        <input type="text" id="friend-cf-url" placeholder="https://codeforces.com/profile/tourist or tourist">
+                    </div>
+                    <div class="form-group">
+                        <label for="friend-lc-url"><i data-lucide="code-2" class="text-orange"></i> LeetCode Profile Link or Handle</label>
+                        <input type="text" id="friend-lc-url" placeholder="https://leetcode.com/u/rahul/ or rahul">
+                    </div>
+                    <div class="form-group">
+                        <label for="friend-cc-url"><i data-lucide="chef-hat" class="text-purple"></i> CodeChef Profile Link or Handle</label>
+                        <input type="text" id="friend-cc-url" placeholder="https://www.codechef.com/users/rahul or rahul">
+                    </div>
+                    <div class="form-group">
+                        <label for="friend-ac-url"><i data-lucide="zap" class="text-cyan"></i> AtCoder Profile Link or Handle</label>
+                        <input type="text" id="friend-ac-url" placeholder="https://atcoder.jp/users/rahul or rahul">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block"><i data-lucide="sparkles"></i> Sync Profile Links & Add to Leaderboard</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="src/js/main.js"></script>
+</body>
+</html>

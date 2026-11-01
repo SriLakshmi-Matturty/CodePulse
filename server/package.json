@@ -1,0 +1,17 @@
+{
+  "name": "devsync-backend",
+  "version": "2.0.0",
+  "description": "DevSync Backend REST API Server",
+  "author": "Satya Dinesh",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "keywords": ["express", "devsync", "api", "rest"]
+}
